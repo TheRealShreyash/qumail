@@ -5,12 +5,16 @@ import { PrimaryButton, SecondaryButton } from "../components/Button";
 import SecurityLevelPicker, { LEVELS } from "../components/SecurityLevelPicker";
 import { useToast } from "../context/ToastContext";
 import { mockEmails } from "../data/mockEmails";
+import { useAuth } from "../hooks/useAuth";
+import { apiRequest } from "../lib/api";
+import { encryptMessage } from "../lib/crypto";
 
 const MAX_CHARS = 2000;
 
 export default function Compose() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [params] = useSearchParams();
 
   const replyTo = mockEmails.find((e) => e.id === (params.get("reply") || params.get("replyAll") || params.get("forward")));
@@ -34,17 +38,53 @@ export default function Compose() {
     setFiles((prev) => [...prev, ...selected]);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!to || !subject) {
       showToast("Add a recipient and subject before sending", "error");
       return;
     }
     setSending(true);
-    setTimeout(() => {
-      showToast(`Email encrypted with ${levelMeta.title} and sent`, "success");
+    try {
+      const senderEmail = user?.email || "alice.demo@gmail.com";
+      
+      // 1. Get Quantum Key from Backend Key Manager
+      const kmRes = await apiRequest("/api/km/enc_keys", {
+        method: "POST",
+        body: JSON.stringify({
+          senderEmail,
+          recipientEmail: to,
+          algorithm: levelMeta?.title || "QAES-Kyber1024",
+        }),
+      });
+
+      const { key_ID, key } = kmRes.data;
+
+      // 2. Encrypt Email Payload Client-Side with Quantum Key
+      const encryptedPayload = await encryptMessage(body, key);
+
+      // 3. Relay Email via Gmail API
+      await apiRequest("/api/email/send", {
+        method: "POST",
+        body: JSON.stringify({
+          senderEmail,
+          recipientEmail: to,
+          subject,
+          body: encryptedPayload,
+          level: levelMeta?.title || "QAES-Kyber1024",
+          keyId: key_ID,
+        }),
+      });
+
+      showToast(`Encrypted with ${levelMeta?.title || "QAES"} & key (${key_ID}) sent!`, "success");
       navigate("/inbox");
-    }, 1000);
+    } catch (err) {
+      console.error("Failed to send email:", err);
+      showToast(`Sending failed: ${err.message}`, "error");
+    } finally {
+      setSending(false);
+    }
   };
+
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-6">

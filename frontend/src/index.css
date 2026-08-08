@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  background-color: #f8fafc;
+}
+
+/* Signature motif: a slow quantum "breathing" pulse used ONLY on live
+   connection indicators (navbar dot, key manager status). Kept to one
+   motif, used sparingly, so it reads as a deliberate signal not decoration. */
+@keyframes quantum-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+}
+.quantum-pulse {
+  animation: quantum-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes quantum-pulse-blue {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+}
+.quantum-pulse-blue {
+  animation: quantum-pulse-blue 2.4s ease-in-out infinite;
+}
+
+/* thin scrollbars for the dense list views */
+.thin-scroll::-webkit-scrollbar { width: 6px; }
+.thin-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 9999px; }
+.thin-scroll::-webkit-scrollbar-track { background-color: transparent; }
+
+.input {
+  flex: 1;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #334155;
+  outline: none;
+}
+.input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px #dbeafe;
+}
+.input::placeholder {
+  color: #94a3b8;
+}
+
+:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quantum-pulse, .quantum-pulse-blue { animation: none; }
+}

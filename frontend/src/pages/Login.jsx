@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
+import GoogleSignInButton from "../components/GoogleSignInButton";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { session, isPending } = useAuth();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -14,6 +17,12 @@ export default function Login() {
   });
   const [testState, setTestState] = useState("idle"); // idle | testing | success | error
   const [loggingIn, setLoggingIn] = useState(false);
+
+  useEffect(() => {
+    if (session && !isPending) {
+      navigate("/inbox", { replace: true });
+    }
+  }, [session, isPending, navigate]);
 
   const update = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -27,6 +36,7 @@ export default function Login() {
     setLoggingIn(true);
     setTimeout(() => navigate("/inbox"), 900);
   };
+
 
   return (
     <div className="grid min-h-screen md:grid-cols-2">
@@ -42,7 +52,7 @@ export default function Login() {
             Every email,<br />quantum secured.
           </p>
           <p className="mt-3 max-w-sm text-sm text-slate-400">
-            Log in with your existing mail account. QuMail handles the quantum key exchange and
+            Log in with your existing mail account or Google. QuMail handles the quantum key exchange and
             encryption layer on top — your provider never sees the difference.
           </p>
         </div>
@@ -50,9 +60,23 @@ export default function Login() {
       </div>
 
       <div className="flex items-center justify-center px-6 py-12">
-        <form onSubmit={handleLogin} className="w-full max-w-sm">
+        <div className="w-full max-w-sm">
           <h1 className="font-display text-2xl font-semibold text-slate-800">Welcome back</h1>
-          <p className="mt-1 text-sm text-slate-500">Connect your mail account to continue.</p>
+          <p className="mt-1 text-sm text-slate-500">Connect your Gmail or mail account to continue.</p>
+
+          {/* Google OAuth Login Button */}
+          <div className="mt-6">
+            <GoogleSignInButton callbackURL="/inbox" label="Sign in with Google / Gmail" />
+          </div>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs font-medium text-slate-400">OR SMTP / IMAP</span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <form onSubmit={handleLogin}>
+
 
           <div className="mt-6 flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700">
             <ShieldCheck size={15} className="mt-0.5 shrink-0" />
@@ -108,6 +132,7 @@ export default function Login() {
             Continue as demo user
           </SecondaryButton>
         </form>
+        </div>
       </div>
     </div>
   );

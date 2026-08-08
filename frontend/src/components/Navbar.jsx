@@ -1,9 +1,13 @@
 import { Bell, ShieldCheck } from "lucide-react";
 import SearchBar from "./SearchBar";
 import ProfileDropdown from "./ProfileDropdown";
-import { currentUser } from "../data/mockUser";
+import { currentUser as mockUser } from "../data/mockUser";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Navbar() {
+  const { user: authUser } = useAuth();
+  const activeUser = authUser || mockUser;
+
   return (
     <header className="flex h-16 shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-5">
       <div className="flex items-center gap-2">
@@ -27,8 +31,9 @@ export default function Navbar() {
           <Bell size={18} />
           <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500" />
         </button>
-        <ProfileDropdown user={currentUser} />
+        <ProfileDropdown user={activeUser} />
       </div>
     </header>
   );
 }
+

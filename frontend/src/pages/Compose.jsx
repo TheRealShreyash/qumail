@@ -4,7 +4,6 @@ import { Paperclip, Send, Save, X, ChevronDown, ChevronUp } from "lucide-react";
 import { PrimaryButton, SecondaryButton } from "../components/Button";
 import SecurityLevelPicker, { LEVELS } from "../components/SecurityLevelPicker";
 import { useToast } from "../context/ToastContext";
-import { mockEmails } from "../data/mockEmails";
 import { useAuth } from "../hooks/useAuth";
 import { apiRequest } from "../lib/api";
 import { encryptMessage } from "../lib/crypto";
@@ -17,15 +16,15 @@ export default function Compose() {
   const { user } = useAuth();
   const [params] = useSearchParams();
 
-  const replyTo = mockEmails.find((e) => e.id === (params.get("reply") || params.get("replyAll") || params.get("forward")));
+  const isReply = params.has("reply");
   const isForward = params.has("forward");
 
-  const [to, setTo] = useState(replyTo && !isForward ? replyTo.senderEmail : "");
+  const [to, setTo] = useState("");
   const [cc, setCc] = useState("");
   const [bcc, setBcc] = useState("");
   const [showCcBcc, setShowCcBcc] = useState(false);
-  const [subject, setSubject] = useState(replyTo ? `${isForward ? "Fwd" : "Re"}: ${replyTo.subject}` : "");
-  const [body, setBody] = useState(replyTo ? `\n\n---\n${replyTo.body}` : "");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
   const [priority, setPriority] = useState("normal");
   const [level, setLevel] = useState("QAES");
   const [files, setFiles] = useState([]);
@@ -90,7 +89,7 @@ export default function Compose() {
     <div className="mx-auto max-w-3xl px-6 py-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-xl font-semibold text-slate-800">
-          {replyTo ? (isForward ? "Forward message" : "Reply") : "New message"}
+          {isReply ? "Reply" : isForward ? "Forward message" : "New message"}
         </h1>
         <button onClick={() => navigate(-1)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"><X size={18} /></button>
       </div>

@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Reply, Forward, Trash2, ShieldCheck, KeyRound, Clock, Lock, RefreshCw } from "lucide-react";
+import {
+  Reply, Forward, Trash2, ShieldCheck, KeyRound, Clock,
+  Lock, Unlock, RefreshCw, ShieldAlert, Eye
+} from "lucide-react";
 import SecurityBadge from "../components/SecurityBadge";
 import AttachmentCard from "../components/AttachmentCard";
 import { SecondaryButton, DangerButton } from "../components/Button";
 import EmptyState from "../components/EmptyState";
 import { useToast } from "../context/ToastContext";
 import { apiRequest } from "../lib/api";
+import { decryptMessage } from "../lib/crypto";
 import { useAuth } from "../hooks/useAuth";
 
 const SECURITY_LABELS = {
@@ -26,15 +30,20 @@ export default function EmailReading() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Decryption state
+  const [decryptionState, setDecryptionState] = useState("locked"); // locked | decrypting | decrypted | failed
+  const [decryptedBody, setDecryptedBody] = useState("");
+  const [decryptedKeyId, setDecryptedKeyId] = useState("");
+
   useEffect(() => {
     if (!user?.email || !id) return;
 
     const load = async () => {
       setLoading(true);
       setError(null);
+      setDecryptionState("locked");
+      setDecryptedBody("");
       try {
-        // Fetch all inbox emails and find the matching one by ID
-        // (We can't easily fetch a single Gmail message without a dedicated endpoint, so we use the inbox list)
         const res = await apiRequest(
           `/api/email/inbox?email=${encodeURIComponent(user.email)}&folder=inbox&limit=50`
         );
@@ -42,7 +51,6 @@ export default function EmailReading() {
         if (found) {
           setEmail(found);
         } else {
-          // Also try sent
           const sentRes = await apiRequest(
             `/api/email/inbox?email=${encodeURIComponent(user.email)}&folder=sent&limit=50`
           );
@@ -58,6 +66,36 @@ export default function EmailReading() {
 
     load();
   }, [id, user?.email]);
+
+  const isEncrypted = email?.keyId;
+
+  const handleDecrypt = async () => {
+    if (!email?.keyId || !user?.email) return;
+
+    setDecryptionState("decrypting");
+    try {
+      // 1. Fetch decryption key from Key Manager
+      const kmRes = await apiRequest(
+        `/api/km/dec_keys?userEmail=${encodeURIComponent(user.email)}&key_ID=${encodeURIComponent(email.keyId)}`
+      );
+
+      if (!kmRes.data?.key) {
+        throw new Error("Key Manager returned no key for this message");
+      }
+
+      // 2. Decrypt client-side with AES-256-GCM
+      const plainText = await decryptMessage(email.preview, kmRes.data.key);
+
+      setDecryptedBody(plainText);
+      setDecryptedKeyId(kmRes.data.key_ID || email.keyId);
+      setDecryptionState("decrypted");
+      showToast("Message decrypted with quantum key", "success");
+    } catch (err) {
+      console.error("Decryption failed:", err);
+      setDecryptionState("failed");
+      showToast(`Decryption failed: ${err.message}`, "error");
+    }
+  };
 
   if (loading) {
     return (
@@ -80,6 +118,7 @@ export default function EmailReading() {
   }
 
   const securityLabel = SECURITY_LABELS[email.security] || email.security;
+  const displayBody = decryptionState === "decrypted" ? decryptedBody : email.preview;
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-6">
@@ -103,16 +142,113 @@ export default function EmailReading() {
         <SecurityBadge level={email.security} size="md" />
       </div>
 
+      {/* ── Message Body Card ── */}
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
-        {email.keyId && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-2.5 text-xs font-medium text-green-700">
-            <Lock size={14} className="text-green-600" />
-            Quantum-encrypted · Key ID: <code className="font-mono">{email.keyId}</code>
+        
+        {/* Encrypted banner + decrypt button */}
+        {isEncrypted && decryptionState === "locked" && (
+          <div className="mb-5 rounded-xl border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                <Lock size={20} className="text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-800">
+                  This message is quantum-encrypted
+                </p>
+                <p className="mt-0.5 text-xs text-amber-600">
+                  Encrypted with {securityLabel} · Key ID: <code className="rounded bg-amber-100 px-1 font-mono">{email.keyId}</code>
+                </p>
+                <p className="mt-2 text-xs text-amber-500">
+                  The message body below is encrypted ciphertext. Click the button to fetch the decryption key from the Quantum Key Manager and decrypt it client-side.
+                </p>
+                <button
+                  onClick={handleDecrypt}
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-amber-700 hover:shadow-md active:scale-[0.98]"
+                >
+                  <Unlock size={15} />
+                  Decrypt with Quantum Key
+                </button>
+              </div>
+            </div>
           </div>
         )}
-        <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
-          {email.preview || "(No message body available)"}
-        </p>
+
+        {/* Decrypting animation */}
+        {decryptionState === "decrypting" && (
+          <div className="mb-5 flex items-center gap-3 rounded-xl border-2 border-blue-200 bg-blue-50 p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+              <KeyRound size={20} className="animate-spin text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-blue-800">Decrypting…</p>
+              <p className="text-xs text-blue-500">
+                Fetching quantum key from Key Manager → AES-256-GCM decrypt in browser
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Decrypted success banner */}
+        {decryptionState === "decrypted" && (
+          <div className="mb-5 flex items-center gap-3 rounded-xl border-2 border-green-200 bg-green-50 p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-100">
+              <ShieldCheck size={20} className="text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-green-800">
+                Message decrypted successfully
+              </p>
+              <p className="text-xs text-green-600">
+                Decrypted client-side using quantum key <code className="rounded bg-green-100 px-1 font-mono">{decryptedKeyId}</code>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Decryption failed banner */}
+        {decryptionState === "failed" && (
+          <div className="mb-5 rounded-xl border-2 border-red-200 bg-red-50 p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100">
+                <ShieldAlert size={20} className="text-red-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-red-800">Decryption failed</p>
+                <p className="mt-0.5 text-xs text-red-500">
+                  The Key Manager could not provide a valid key, or the ciphertext was corrupted.
+                </p>
+                <button
+                  onClick={handleDecrypt}
+                  className="mt-2 inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                >
+                  <RefreshCw size={13} /> Try again
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Message body — shows ciphertext when locked, plaintext when decrypted */}
+        <div className={`relative rounded-lg ${isEncrypted && decryptionState === "locked" ? "bg-slate-900 p-4" : ""}`}>
+          {isEncrypted && decryptionState === "locked" ? (
+            <>
+              <div className="flex items-center gap-2 mb-2">
+                <Eye size={12} className="text-slate-500" />
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                  Encrypted Ciphertext
+                </span>
+              </div>
+              <pre className="whitespace-pre-wrap break-all font-mono text-xs leading-relaxed text-green-400/80 select-all">
+                {displayBody || "(Empty encrypted payload)"}
+              </pre>
+            </>
+          ) : (
+            <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+              {displayBody || "(No message body available)"}
+            </p>
+          )}
+        </div>
 
         {email.attachments?.length > 0 && (
           <div className="mt-6">
@@ -145,18 +281,32 @@ export default function EmailReading() {
         </DangerButton>
       </div>
 
+      {/* ── Security Details Panel ── */}
       <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Message Security
         </p>
-        <dl className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
+        <dl className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <Info label="Encryption" value={securityLabel} />
           {email.keyId && <Info label="Key ID" value={email.keyId} mono />}
+          <Info
+            label="Decryption"
+            value={
+              decryptionState === "decrypted" ? "Decrypted ✓" :
+              decryptionState === "failed" ? "Failed ✗" :
+              isEncrypted ? "Locked 🔒" : "N/A"
+            }
+            valueClass={
+              decryptionState === "decrypted" ? "text-green-600" :
+              decryptionState === "failed" ? "text-red-500" :
+              "text-amber-600"
+            }
+          />
           <Info label="Status" value="Delivered" valueClass="text-green-600" />
         </dl>
-        {email.keyId && (
+        {decryptionState === "decrypted" && (
           <div className="mt-4 flex items-center gap-2 text-xs text-green-600">
-            <KeyRound size={13} /> Signature verified against sender's quantum-derived key
+            <KeyRound size={13} /> Decrypted with quantum-derived key from Key Manager
           </div>
         )}
       </div>

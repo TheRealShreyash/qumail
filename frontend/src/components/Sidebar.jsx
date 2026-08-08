@@ -2,9 +2,9 @@ import { NavLink } from "react-router-dom";
 import { Inbox, Send, FileEdit, Trash2, PenSquare, KeyRound, ScrollText, Settings } from "lucide-react";
 
 const mailLinks = [
-  { to: "/inbox", label: "Inbox", icon: Inbox, badge: 2 },
+  { to: "/inbox", label: "Inbox", icon: Inbox },
   { to: "/sent", label: "Sent", icon: Send },
-  { to: "/drafts", label: "Drafts", icon: FileEdit, badge: 1 },
+  { to: "/drafts", label: "Drafts", icon: FileEdit },
   { to: "/trash", label: "Trash", icon: Trash2 },
 ];
 

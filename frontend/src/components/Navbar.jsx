@@ -1,12 +1,10 @@
 import { Bell, ShieldCheck } from "lucide-react";
 import SearchBar from "./SearchBar";
 import ProfileDropdown from "./ProfileDropdown";
-import { currentUser as mockUser } from "../data/mockUser";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Navbar() {
-  const { user: authUser } = useAuth();
-  const activeUser = authUser || mockUser;
+  const { user } = useAuth();
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-4 border-b border-slate-200 bg-white px-5">
@@ -29,11 +27,9 @@ export default function Navbar() {
         </div>
         <button aria-label="Notifications" className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100">
           <Bell size={18} />
-          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-red-500" />
         </button>
-        <ProfileDropdown user={activeUser} />
+        <ProfileDropdown user={user} />
       </div>
     </header>
   );
 }
-

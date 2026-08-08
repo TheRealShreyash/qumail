@@ -1,5 +1,5 @@
 import { ShieldCheck, Lock, Cpu, Mail } from "lucide-react";
-import { securityLevels } from "../data/mockEmails";
+import { securityLevels } from "../data/securityLevels";
 
 const styles = {
   green: "bg-green-50 text-green-700 border-green-200",

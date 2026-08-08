@@ -1,5 +1,6 @@
 import express from "express";
 import kmRouter from "./modules/km/km.routes";
+import emailRouter from "./modules/email/email.routes";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./common/utils/auth";
 
@@ -22,6 +23,8 @@ export function createApplication() {
   app.all('/api/auth/{*any}', toNodeHandler(auth));
   app.use(express.json());
   app.use("/api/km", kmRouter);
+  app.use("/api/email", emailRouter);
+
 
   app.get("/health", (req, res) => {
     res.json({ status: "Server healthy" });

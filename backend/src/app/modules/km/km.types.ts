@@ -1,17 +1,23 @@
-export type EncKeyResult = { key_ID: string; key: string }; // key is base64
+export type EncKeyResult = {
+  key_ID: string;
+  key: string;
+  algorithm: string;
+  senderEmail: string;
+  recipientEmail: string;
+  createdAt: Date | string;
+};
 
 export type KmStatus = {
-  km_id: string;
-  total_keys: number;
-  available_keys: number;
-  consumed_keys: number;
-  key_size_bytes: number;
+  totalKeys: number;
+  activeKeys: number;
+  consumedKeys: number;
+  totalLogs: number;
 };
 
 export class KmError extends Error {
   constructor(
     message: string,
-    public status: number,
+    public status: number = 400,
   ) {
     super(message);
   }

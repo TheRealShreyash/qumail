@@ -73,8 +73,42 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+export const quantumKeys = pgTable(
+  "quantum_keys",
+  {
+    id: text("id").primaryKey(),
+    keyId: text("key_id").notNull().unique(),
+    keyValue: text("key_value").notNull(),
+    algorithm: text("algorithm").notNull(),
+    senderEmail: text("sender_email").notNull(),
+    recipientEmail: text("recipient_email").notNull(),
+    status: text("status").default("ACTIVE").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at"),
+  },
+  (table) => [
+    index("quantumKeys_keyId_idx").on(table.keyId),
+    index("quantumKeys_sender_idx").on(table.senderEmail),
+    index("quantumKeys_recipient_idx").on(table.recipientEmail),
+  ],
+);
+
+export const securityLogs = pgTable(
+  "security_logs",
+  {
+    id: text("id").primaryKey(),
+    userEmail: text("user_email").notNull(),
+    action: text("action").notNull(),
+    keyId: text("key_id"),
+    algorithm: text("algorithm"),
+    ipAddress: text("ip_address"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [index("securityLogs_user_idx").on(table.userEmail)],
+);
+
 export const relations = defineRelations(
-  { user, session, account, verification },
+  { user, session, account, verification, quantumKeys, securityLogs },
   (r) => ({
     user: {
       sessions: r.many.session(),
@@ -94,3 +128,4 @@ export const relations = defineRelations(
     },
   }),
 );
+

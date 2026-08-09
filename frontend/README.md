@@ -1,48 +1,107 @@
-# QuMail — Quantum Secure Email Client (Frontend)
+# 🎨 QuMail Frontend Web Application
 
-Hackathon frontend for QuMail. React + Vite + Tailwind CSS v4. Mock data only —
-no backend, auth, or real encryption yet (see "Next steps" below).
+> **React 19 + Vite + TailwindCSS v4 Quantum Mail Interface**
 
-## Run it
+The QuMail frontend provides a modern single-page application (SPA) for email composition, post-quantum key management, security log auditing, and Google OAuth login.
+
+---
+
+## 🚀 Key Client Services & Architecture
+
+### 1. Same-Origin API Proxying (Vercel Rewrites)
+To prevent cross-domain cookie stripping on `*.vercel.app` subdomains (caused by the Public Suffix List), all production API calls hit `/api/*` on the frontend domain (`qumail-nine.vercel.app`). `vercel.json` proxies these calls server-to-server to the backend.
+
+```json
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://qumail-backend-rho.vercel.app/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+### 2. Client Authentication (`src/lib/auth-client.js`)
+Uses `better-auth/react` to manage authentication state and Google OAuth sign-in flows cleanly.
+
+### 3. Local Web Cryptography (`src/lib/crypto.js`)
+Performs client-side encryption using AES-256-GCM with quantum-generated key material before email content leaves the browser.
+
+---
+
+## 📁 Frontend Project Structure
+
+```
+frontend/
+├── public/                    # Static Assets
+├── src/
+│   ├── assets/                # Logos & Icons
+│   ├── components/            # UI Components (Buttons, Modals, Badges, GoogleSignInButton)
+│   ├── context/               # Global Contexts (AuthContext, ThemeContext, ToastContext)
+│   ├── data/                  # Mock Email & Log Data Fallbacks
+│   ├── hooks/                 # Custom Hooks (useAuth, useTheme, useToast)
+│   ├── layouts/               # DashboardLayout (Navbar, Sidebar, Right Panel)
+│   ├── lib/
+│   │   ├── api.js             # API Request Client Wrapper
+│   │   ├── auth-client.js     # Better-Auth Client Setup
+│   │   └── crypto.js          # Web Crypto Encryption Utilities
+│   ├── pages/                 # Route Page Components
+│   ├── routes/                # React Router AppRoutes Definition
+│   ├── App.jsx                # Main Application Provider Wrapper
+│   ├── main.jsx               # React DOM Root Mounting
+│   └── index.css              # TailwindCSS Styles & Custom Design System
+├── package.json
+├── vercel.json                # Production Same-Origin Rewrites
+└── vite.config.js             # Development Server Proxy
+```
+
+---
+
+## 🗺️ Page Route Map
+
+| Route | Component | Description | Access |
+|---|---|---|---|
+| `/` | `Welcome.jsx` | Product Landing & Feature Showcase | Public |
+| `/login` | `Login.jsx` | Google OAuth & SMTP/IMAP Credentials Form | Public |
+| `/inbox` | `Inbox.jsx` | Encrypted Inbox & Folder Mail Lists | Protected |
+| `/sent` | `Inbox.jsx` | Sent Mail Folder | Protected |
+| `/drafts` | `Inbox.jsx` | Drafts Folder | Protected |
+| `/trash` | `Inbox.jsx` | Deleted Items | Protected |
+| `/mail/:id` | `EmailReading.jsx` | Email Viewer with Decryption Status | Protected |
+| `/compose` | `Compose.jsx` | Email Composer with Encryption Picker | Protected |
+| `/security` | `SecurityConfig.jsx` | Standalone Security Level Selector | Protected |
+| `/keys` | `KeyManager.jsx` | Quantum Key Management Dashboard | Protected |
+| `/logs` | `SecurityLogs.jsx` | Real-time Audit & Security Event Logs | Protected |
+| `/settings` | `Settings.jsx` | User Preferences & Server Configurations | Protected |
+
+---
+
+## ⚙️ Environment Variables
+
+Create `.env` in `frontend/`:
+
+```env
+# In Local Dev: set to http://localhost:8080 (or leave empty to use Vite proxy)
+# In Production on Vercel: set to https://qumail-nine.vercel.app (or leave empty)
+VITE_BACKEND_URL=http://localhost:8080
+```
+
+---
+
+## 💻 Local Development & Build Scripts
 
 ```bash
+# Install dependencies
 npm install
+
+# Start Vite dev server with proxy
 npm run dev
+
+# Run Oxlint for code linting
+npm run lint
+
+# Build production bundle
+npm run build
+
+# Preview production build locally
+npm run preview
 ```
-
-Open the printed localhost URL. Start at `/` (Welcome) → "Get Started" → Login
-("Continue as demo user" skips the form) → Inbox.
-
-## Pages
-
-| Route | Page |
-|---|---|
-| `/` | Welcome / landing |
-| `/login` | Login (SMTP/IMAP fields, Test Connection) |
-| `/inbox`, `/sent`, `/drafts`, `/trash` | Mail list views |
-| `/mail/:id` | Email reading view |
-| `/compose` | Compose (supports `?reply=`, `?replyAll=`, `?forward=` with an email id) |
-| `/security` | Standalone security-level picker |
-| `/keys` | Quantum Key Manager dashboard |
-| `/logs` | Security logs |
-| `/settings` | Settings |
-
-## Folder structure
-
-```
-src/
-  components/   reusable UI (Button, Modal, EmailCard, SecurityBadge, ...)
-  pages/        one file per route
-  layouts/      DashboardLayout (navbar + sidebar + right panel + outlet)
-  routes/       AppRoutes.jsx — all route definitions
-  context/      ToastContext (global toast notifications)
-  data/         mock JSON-like data (emails, keys, logs, user)
-```
-
-## Next steps (backend integration)
-
-- Swap `src/data/*` for real API calls (React Query or plain fetch + hooks).
-- Wire the 4 security levels in `SecurityLevelPicker.jsx` to real encryption
-  calls (OTP, quantum-seeded AES, PQC, none) instead of just setting local state.
-- Point `/keys` at a real ETSI GS QKD 014 Key Manager REST endpoint.
-- Add real auth (the Login page currently has no logic, by design).

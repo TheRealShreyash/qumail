@@ -35,6 +35,12 @@ export function createApplication() {
     res.json({ status: "Server healthy" });
   });
 
+  app.get("/", (req, res) => {
+    const frontend = process.env.FRONTEND_URL || "https://qumail-nine.vercel.app";
+    const queryString = req.url.includes("?") ? req.url.substring(req.url.indexOf("?")) : "";
+    res.redirect(`${frontend.replace(/\/$/, "")}/login${queryString}`);
+  });
+
   return app;
 }
 

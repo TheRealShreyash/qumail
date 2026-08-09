@@ -1,5 +1,7 @@
-const rawUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
-export const API_BASE_URL = rawUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
+const rawUrl = import.meta.env.VITE_BACKEND_URL;
+export const API_BASE_URL = rawUrl && rawUrl.trim() !== ""
+  ? rawUrl.replace(/\/api\/?$/, "").replace(/\/$/, "")
+  : "";
 
 export async function apiRequest(endpoint, options = {}) {
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;

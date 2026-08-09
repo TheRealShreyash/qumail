@@ -1,7 +1,9 @@
 import { createAuthClient } from "better-auth/react";
 
-const rawUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
-const baseURL = rawUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
+const rawUrl = import.meta.env.VITE_BACKEND_URL;
+const baseURL = rawUrl && rawUrl.trim() !== ""
+  ? rawUrl.replace(/\/api\/?$/, "").replace(/\/$/, "")
+  : (typeof window !== "undefined" ? window.location.origin : "http://localhost:8080");
 
 export const authClient = createAuthClient({
   baseURL,

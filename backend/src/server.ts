@@ -1,19 +1,13 @@
-import http from "node:http";
 import "dotenv/config";
 import { createApplication } from "./app";
 
-async function main() {
-  try {
-    const server = http.createServer(createApplication());
-    const PORT = process.env.PORT || 8080;
+const app = createApplication();
 
-    server.listen(PORT, () => {
-      console.log(`HTTP server started at http://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.log(`Error starting http server:`, error);
-    process.exit(1);
-  }
+if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+  const PORT = process.env.PORT || 8080;
+  app.listen(PORT, () => {
+    console.log(`HTTP server started at http://localhost:${PORT}`);
+  });
 }
 
-main();
+export default app;

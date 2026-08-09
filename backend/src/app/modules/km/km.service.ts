@@ -34,6 +34,10 @@ export async function generateEncryptionKey(
     })
     .returning();
 
+  if (!createdKey) {
+    throw new KmError("Failed to create quantum key record", 500);
+  }
+
   // Log action
   await db.insert(securityLogs).values({
     id: crypto.randomUUID(),

@@ -21,7 +21,7 @@ async function refreshGoogleAccessToken(refreshToken: string): Promise<string> {
     throw new Error(`Failed to refresh Google access token: ${errText}`);
   }
 
-  const data = await res.json();
+  const data = (await res.json()) as { access_token: string };
   return data.access_token;
 }
 
@@ -118,7 +118,7 @@ export async function sendEmailViaGmail({
     throw new Error(`Gmail API error (${gmailRes.status}): ${errText}`);
   }
 
-  const result = await gmailRes.json();
+  const result = (await gmailRes.json()) as { id: string; threadId: string };
   return { success: true, method: "GMAIL_API", messageId: result.id, threadId: result.threadId };
 }
 
@@ -145,7 +145,7 @@ export async function fetchInboxEmails(userEmail: string, folder: string = "inbo
     throw new Error(`Failed to fetch Gmail ${folder}: ${errText}`);
   }
 
-  const listData = await listRes.json();
+  const listData = (await listRes.json()) as { messages?: { id: string }[] };
   const messages = listData.messages || [];
 
   if (messages.length === 0) return [];

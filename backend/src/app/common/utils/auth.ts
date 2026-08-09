@@ -14,10 +14,11 @@ const trustedOrigins = Array.from(
       "http://localhost:8080",
       frontendUrl.replace(/\/$/, ""),
       baseURL,
-      "https://qumail-ten.vercel.app",
     ].filter(Boolean)
   )
 );
+
+const isProduction = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -27,7 +28,14 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL,
   trustedOrigins,
-
+  advanced: {
+    defaultCookieAttributes: isProduction
+      ? {
+          sameSite: "none",
+          secure: true,
+        }
+      : undefined,
+  },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,

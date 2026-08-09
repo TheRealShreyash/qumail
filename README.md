@@ -199,5 +199,17 @@ Under **Authorized redirect URIs**:
 
 ---
 
+## 👥 Team & Credits
+
+Special thanks to everyone who contributed to building QuMail:
+
+| Contributor | Role | GitHub Profile |
+|---|---|---|
+| **Shreyash Koshta** | Backend Engine & Integration | [@therealshreyash](https://github.com/TheRealShreyash) |
+| **Rohit Sharma** | Frontend UI Development | [@rooohittt88](https://github.com/rooohittt88) |
+| **Priyanshu Pandit** | Frontend UI Development | [@odenthegod](https://github.com/odenthegod) |
+
+---
+
 ## 📄 License
 Distributed under the MIT License. See `LICENSE` for details.

@@ -1,7 +1,7 @@
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-  baseURL: "http://localhost:8080",
+  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:8080",
 });
 
 export const signInWithGoogle = async (callbackURL = "/inbox") => {

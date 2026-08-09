@@ -89,7 +89,7 @@ export default function KeyManager() {
         <div className="flex items-center gap-2">
           <span className="quantum-pulse flex h-2.5 w-2.5 rounded-full bg-green-500" />
           <p className="text-sm font-semibold text-green-700">KM Node Operational</p>
-          <span className="text-xs text-green-500">· http://localhost:8080/api/km</span>
+          <span className="text-xs text-green-500">· {import.meta.env.VITE_BACKEND_URL || "http://localhost:8080"}/api/km</span>
         </div>
         <p className="mt-1 text-xs text-green-600">Database connected & sync active</p>
       </div>

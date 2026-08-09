@@ -1,5 +1,5 @@
 const rawUrl = import.meta.env.VITE_BACKEND_URL;
-export const API_BASE_URL = rawUrl && rawUrl.trim() !== ""
+export const API_BASE_URL = import.meta.env.DEV && rawUrl && rawUrl.trim() !== ""
   ? rawUrl.replace(/\/api\/?$/, "").replace(/\/$/, "")
   : "";
 

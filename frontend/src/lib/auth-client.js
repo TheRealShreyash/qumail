@@ -5,6 +5,7 @@ const baseURL = rawUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
 
 export const authClient = createAuthClient({
   baseURL,
+  basePath: "/api/auth",
 });
 
 export const signInWithGoogle = async (callbackURL = "/inbox") => {

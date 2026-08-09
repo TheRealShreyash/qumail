@@ -4,8 +4,7 @@ import db from "../../../db";
 import * as schema from "../../../db/schema";
 
 const rawAuthUrl = process.env.BETTER_AUTH_URL || "http://localhost:8080";
-const cleanBaseUrl = rawAuthUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
-const baseURL = `${cleanBaseUrl}/api/auth`;
+const baseURL = rawAuthUrl.replace(/\/api\/auth\/?$/, "").replace(/\/api\/?$/, "").replace(/\/$/, "");
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 const trustedOrigins = Array.from(
@@ -14,15 +13,15 @@ const trustedOrigins = Array.from(
       "http://localhost:5173",
       "http://localhost:8080",
       "https://qumail-nine.vercel.app",
-      "https://qumail-ten.vercel.app",
       "https://qumail-backend-rho.vercel.app",
       frontendUrl.replace(/\/$/, ""),
-      cleanBaseUrl,
-    ].filter(Boolean)
-  )
+      baseURL,
+    ].filter(Boolean),
+  ),
 );
 
-const isProduction = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
+const isProduction =
+  process.env.NODE_ENV === "production" || !!process.env.VERCEL;
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -31,6 +30,7 @@ export const auth = betterAuth({
   }),
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL,
+  basePath: "/api/auth",
   trustedOrigins,
   advanced: {
     useSecureCookies: isProduction,

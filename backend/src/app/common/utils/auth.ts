@@ -4,7 +4,8 @@ import db from "../../../db";
 import * as schema from "../../../db/schema";
 
 const rawAuthUrl = process.env.BETTER_AUTH_URL || "http://localhost:8080";
-const baseURL = rawAuthUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
+const cleanBaseUrl = rawAuthUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
+const baseURL = `${cleanBaseUrl}/api/auth`;
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 const trustedOrigins = Array.from(
@@ -12,8 +13,11 @@ const trustedOrigins = Array.from(
     [
       "http://localhost:5173",
       "http://localhost:8080",
+      "https://qumail-nine.vercel.app",
+      "https://qumail-ten.vercel.app",
+      "https://qumail-backend-rho.vercel.app",
       frontendUrl.replace(/\/$/, ""),
-      baseURL,
+      cleanBaseUrl,
     ].filter(Boolean)
   )
 );

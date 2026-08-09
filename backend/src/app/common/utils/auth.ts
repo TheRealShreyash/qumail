@@ -32,7 +32,11 @@ export const auth = betterAuth({
   baseURL,
   basePath: "/api/auth",
   trustedOrigins,
+  account: {
+    storeStateStrategy: "cookie",
+  },
   advanced: {
+    trustedProxyHeaders: true,
     useSecureCookies: isProduction,
     defaultCookieAttributes: isProduction
       ? {

@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import db from "../../../db";
 import * as schema from "../../../db/schema";
 
-const rawAuthUrl = process.env.BETTER_AUTH_URL || "http://localhost:8080";
+const rawAuthUrl = process.env.FRONTEND_URL || process.env.BETTER_AUTH_URL || "http://localhost:8080";
 const baseURL = rawAuthUrl.replace(/\/api\/auth\/?$/, "").replace(/\/api\/?$/, "").replace(/\/$/, "");
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";

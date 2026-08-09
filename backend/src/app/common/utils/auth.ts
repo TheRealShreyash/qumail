@@ -29,12 +29,7 @@ export const auth = betterAuth({
   baseURL,
   trustedOrigins,
   advanced: {
-    defaultCookieAttributes: isProduction
-      ? {
-          sameSite: "none",
-          secure: true,
-        }
-      : undefined,
+    useSecureCookies: isProduction,
   },
   socialProviders: {
     google: {

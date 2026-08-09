@@ -3,14 +3,30 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import db from "../../../db";
 import * as schema from "../../../db/schema";
 
+const rawAuthUrl = process.env.BETTER_AUTH_URL || "http://localhost:8080";
+const baseURL = rawAuthUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
+
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+const trustedOrigins = Array.from(
+  new Set(
+    [
+      "http://localhost:5173",
+      "http://localhost:8080",
+      frontendUrl.replace(/\/$/, ""),
+      baseURL,
+      "https://qumail-ten.vercel.app",
+    ].filter(Boolean)
+  )
+);
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
   }),
   secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:8080",
-  trustedOrigins: ["http://localhost:5173"],
+  baseURL,
+  trustedOrigins,
 
   socialProviders: {
     google: {
@@ -28,4 +44,3 @@ export const auth = betterAuth({
     },
   },
 });
-

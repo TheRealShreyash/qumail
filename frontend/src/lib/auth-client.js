@@ -1,7 +1,10 @@
 import { createAuthClient } from "better-auth/react";
 
+const rawUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
+const baseURL = rawUrl.replace(/\/api\/?$/, "").replace(/\/$/, "");
+
 export const authClient = createAuthClient({
-  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:8080",
+  baseURL,
 });
 
 export const signInWithGoogle = async (callbackURL = "/inbox") => {
@@ -15,8 +18,6 @@ export const signInWithGoogle = async (callbackURL = "/inbox") => {
   });
 };
 
-
 export const signOut = async () => {
   return await authClient.signOut();
 };
-

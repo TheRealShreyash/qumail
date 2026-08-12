@@ -176,7 +176,21 @@ export async function fetchInboxEmails(userEmail: string, folder: string = "inbo
       const date = getHeader("Date");
       const parsedDate = date ? new Date(date) : new Date();
       const keyId = getHeader("X-QuMail-Key-ID");
-      const security = keyId ? "QAES" : getHeader("X-QuMail-Security") || "NONE";
+      const headerSec = getHeader("X-QuMail-Security");
+      let security = "NONE";
+      if (headerSec) {
+        if (headerSec.includes("OTP") || headerSec.includes("One-Time Pad") || headerSec === "Quantum Secure") {
+          security = "OTP";
+        } else if (headerSec.includes("PQC") || headerSec.includes("Kyber")) {
+          security = "PQC";
+        } else if (headerSec.includes("QAES") || headerSec.includes("AES")) {
+          security = "QAES";
+        } else {
+          security = headerSec;
+        }
+      } else if (keyId) {
+        security = "QAES";
+      }
       const isRead = !msg.labelIds?.includes("UNREAD");
 
       return {

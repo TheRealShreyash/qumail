@@ -6,7 +6,7 @@ import SecurityLevelPicker, { LEVELS } from "../components/SecurityLevelPicker";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../hooks/useAuth";
 import { apiRequest } from "../lib/api";
-import { encryptMessage } from "../lib/crypto";
+import { encryptPayload } from "../lib/crypto";
 
 const MAX_CHARS = 2000;
 
@@ -45,21 +45,29 @@ export default function Compose() {
     setSending(true);
     try {
       const senderEmail = user?.email || "alice.demo@gmail.com";
-      
-      // 1. Get Quantum Key from Backend Key Manager
-      const kmRes = await apiRequest("/api/km/enc_keys", {
-        method: "POST",
-        body: JSON.stringify({
-          senderEmail,
-          recipientEmail: to,
-          algorithm: levelMeta?.title || "QAES-Kyber1024",
-        }),
-      });
+      const bodyByteLength = new TextEncoder().encode(body).length;
 
-      const { key_ID, key } = kmRes.data;
+      let key_ID = undefined;
+      let encryptedPayload = body;
 
-      // 2. Encrypt Email Payload Client-Side with Quantum Key
-      const encryptedPayload = await encryptMessage(body, key);
+      if (level !== "NONE") {
+        // 1. Get Quantum Key from Backend Key Manager
+        const kmRes = await apiRequest("/api/km/enc_keys", {
+          method: "POST",
+          body: JSON.stringify({
+            senderEmail,
+            recipientEmail: to,
+            algorithm: levelMeta?.title || "QAES-Kyber1024",
+            keyLength: bodyByteLength,
+          }),
+        });
+
+        const keyData = kmRes.data;
+        key_ID = keyData.key_ID;
+
+        // 2. Encrypt Email Payload Client-Side (Dispatches to OTP XOR or QAES AES-256)
+        encryptedPayload = await encryptPayload(body, keyData.key, level);
+      }
 
       // 3. Relay Email via Gmail API
       await apiRequest("/api/email/send", {
@@ -69,12 +77,17 @@ export default function Compose() {
           recipientEmail: to,
           subject,
           body: encryptedPayload,
-          level: levelMeta?.title || "QAES-Kyber1024",
+          level: levelMeta?.id || level,
           keyId: key_ID,
         }),
       });
 
-      showToast(`Encrypted with ${levelMeta?.title || "QAES"} & key (${key_ID}) sent!`, "success");
+      showToast(
+        level === "NONE"
+          ? "Unencrypted message sent!"
+          : `Encrypted with ${levelMeta?.title || level} & key (${key_ID}) sent!`,
+        "success"
+      );
       navigate("/inbox");
     } catch (err) {
       console.error("Failed to send email:", err);

@@ -10,7 +10,7 @@ import { SecondaryButton, DangerButton } from "../components/Button";
 import EmptyState from "../components/EmptyState";
 import { useToast } from "../context/ToastContext";
 import { apiRequest } from "../lib/api";
-import { decryptMessage } from "../lib/crypto";
+import { decryptPayload } from "../lib/crypto";
 import { useAuth } from "../hooks/useAuth";
 
 const SECURITY_LABELS = {
@@ -83,13 +83,18 @@ export default function EmailReading() {
         throw new Error("Key Manager returned no key for this message");
       }
 
-      // 2. Decrypt client-side with AES-256-GCM
-      const plainText = await decryptMessage(email.preview, kmRes.data.key);
+      // 2. Decrypt client-side using decryptPayload (dispatches to OTP XOR or QAES AES-256)
+      const plainText = await decryptPayload(email.preview, kmRes.data.key, email.security);
 
       setDecryptedBody(plainText);
       setDecryptedKeyId(kmRes.data.key_ID || email.keyId);
       setDecryptionState("decrypted");
-      showToast("Message decrypted with quantum key", "success");
+      showToast(
+        email.security === "OTP"
+          ? "Message decrypted with One-Time Pad QKD key!"
+          : "Message decrypted with quantum key",
+        "success"
+      );
     } catch (err) {
       console.error("Decryption failed:", err);
       setDecryptionState("failed");
@@ -183,7 +188,7 @@ export default function EmailReading() {
             <div>
               <p className="text-sm font-semibold text-blue-800">Decrypting…</p>
               <p className="text-xs text-blue-500">
-                Fetching quantum key from Key Manager → AES-256-GCM decrypt in browser
+                Fetching quantum key from Key Manager → {email.security === "OTP" ? "One-Time Pad bitwise XOR stream decrypt" : "AES-256-GCM decrypt"} in browser
               </p>
             </div>
           </div>
@@ -191,16 +196,16 @@ export default function EmailReading() {
 
         {/* Decrypted success banner */}
         {decryptionState === "decrypted" && (
-          <div className="mb-5 flex items-center gap-3 rounded-xl border-2 border-green-200 bg-green-50 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-100">
-              <ShieldCheck size={20} className="text-green-600" />
+          <div className={`mb-5 flex items-center gap-3 rounded-xl border-2 ${email.security === "OTP" ? "border-emerald-300 bg-emerald-50" : "border-green-200 bg-green-50"} p-4`}>
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${email.security === "OTP" ? "bg-emerald-100" : "bg-green-100"}`}>
+              <ShieldCheck size={20} className={email.security === "OTP" ? "text-emerald-700" : "text-green-600"} />
             </div>
             <div>
-              <p className="text-sm font-semibold text-green-800">
-                Message decrypted successfully
+              <p className={`text-sm font-semibold ${email.security === "OTP" ? "text-emerald-900" : "text-green-800"}`}>
+                {email.security === "OTP" ? "Information-Theoretically Secure (One-Time Pad)" : "Message decrypted successfully"}
               </p>
-              <p className="text-xs text-green-600">
-                Decrypted client-side using quantum key <code className="rounded bg-green-100 px-1 font-mono">{decryptedKeyId}</code>
+              <p className={`text-xs ${email.security === "OTP" ? "text-emerald-700" : "text-green-600"}`}>
+                {email.security === "OTP" ? "Decrypted client-side via bitwise XOR with single-use QKD quantum key " : "Decrypted client-side using quantum key "}<code className={`rounded ${email.security === "OTP" ? "bg-emerald-200/60" : "bg-green-100"} px-1 font-mono`}>{decryptedKeyId}</code>
               </p>
             </div>
           </div>
@@ -225,6 +230,23 @@ export default function EmailReading() {
                   <RefreshCw size={13} /> Try again
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Standard TLS Notice for unencrypted messages */}
+        {!isEncrypted && (
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-slate-600">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-200/70 text-slate-500">
+              <Lock size={17} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-700">
+                Standard TLS In-Transit Encryption (No End-to-End Quantum Key)
+              </p>
+              <p className="text-[11px] text-slate-500">
+                Encrypted in-transit using standard Gmail TLS 1.3 protocol. Payload is unencrypted at rest.
+              </p>
             </div>
           </div>
         )}

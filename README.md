@@ -1,20 +1,43 @@
 # 🛡️ QuMail — Quantum-Secured Email & Key Management Platform
 
 > **Quantum-Safe Post-Quantum Cryptography (PQC) & QKD-Enabled Mail Client**  
-> QuMail equips legacy email infrastructures (Gmail, standard SMTP/IMAP) with quantum key distribution (QKD) integration, hybrid AES-256-GCM encryption, post-quantum key management, and seamless Google OAuth 2.0 authentication.
+> QuMail equips legacy email infrastructures (Gmail, standard SMTP/IMAP) with a 4-tier quantum security model — from mathematically unbreakable One-Time Pad (OTP) encryption to standard TLS transport — all without requiring mail servers to change.
 
 ---
 
 ## 📸 Overview
 
-QuMail protects sensitive communications against future quantum computer decryption attacks ("Harvest Now, Decrypt Later"). It wraps end-to-end encryption around existing email accounts without requiring mail servers to change.
+QuMail protects sensitive communications against future quantum computer decryption attacks ("Harvest Now, Decrypt Later"). It wraps end-to-end encryption around existing Google accounts **before** messages leave the device, leaving the Gmail API as a blind transport layer.
 
 ### Key Capabilities
-- ⚛️ **Quantum Key Management (KM):** Simulates ETSI GS QKD 014 REST key management interface for generating, exchanging, and auditing post-quantum encryption keys.
-- 🔒 **Hybrid Client-Side Encryption:** Messages are encrypted before hitting the wire using AES-GCM-256 with quantum-seeded key material.
+
+- 🛡️ **One-Time Pad (OTP) Encryption:** The highest tier of quantum security. Implements Claude Shannon's information-theoretically secure XOR stream cipher (`Ciphertext = Plaintext ⊕ Key`) using a single-use QKD key exactly as long as the message body — mathematically unbreakable by any supercomputer or quantum computer.
+- 🔒 **Quantum-Aided AES-256-GCM (QAES):** Quantum-seeded AES-256-GCM block cipher encryption for high-speed secure messaging. Each email gets a unique single-use 256-bit key.
+- 🧬 **Post-Quantum Crypto (PQC):** NIST-standardized CRYSTALS-Kyber / Dilithium algorithm tier for resilience when live quantum key channels are unavailable.
+- 🌐 **Standard TLS (NONE):** Legacy mode — standard Gmail TLS 1.3 in-transit protection with no client-side payload encryption.
+- ⚛️ **Quantum Key Management (KM):** ETSI GS QKD 014 REST API interface for generating, exchanging, and auditing quantum keys. Every key is single-use: `ACTIVE` → `CONSUMED` on first decryption.
 - 🔑 **Google OAuth 2.0 Integration:** Powered by `better-auth` with Google Gmail API scopes (`gmail.send`, `gmail.readonly`).
-- 🌐 **Vercel Same-Origin Proxying:** Built with reverse-proxy rewrites preventing cross-domain cookie stripping on `*.vercel.app` deployments.
-- 🗄️ **Serverless Relational Storage:** Powered by Drizzle ORM and Neon Serverless PostgreSQL.
+- 🌐 **Vercel Same-Origin Proxying:** Reverse-proxy rewrites preventing cross-domain cookie stripping on `*.vercel.app` deployments.
+- 🗄️ **Serverless Relational Storage:** Drizzle ORM + Neon Serverless PostgreSQL for keys, users, and security audit logs.
+
+---
+
+## 🔐 4-Tier Security Model
+
+| Tier | Mode | Algorithm | Key Size | Security Guarantee | Badge |
+|---|---|---|---|---|---|
+| 🥇 **Tier 1** | `OTP` — One-Time Pad | Bitwise XOR Stream (`P ⊕ K`) | Dynamic (= message byte length) | **Information-Theoretic (Unbreakable)** | Green |
+| 🥈 **Tier 2** | `QAES` — Quantum-Aided AES | AES-256-GCM + Quantum Seed | Fixed 256-bit (32 bytes) | Computational Security | Blue |
+| 🥉 **Tier 3** | `PQC` — Post-Quantum Crypto | CRYSTALS-Kyber / Dilithium | NIST PQC Standard | Quantum-Resistant Computational | Purple |
+| ⬜ **Tier 4** | `NONE` — Standard Email | Gmail TLS 1.3 (in-transit only) | N/A | Transport Security (no E2E) | Gray |
+
+> **OTP Key Lifecycle:**  
+> 1. Sender selects OTP → Client calculates body byte length.  
+> 2. Backend KM generates `crypto.randomBytes(length)` — a QKD raw random stream matching message size.  
+> 3. Client XOR-encrypts payload: `Ciphertext[i] = Plaintext[i] ⊕ Key[i]`.  
+> 4. Encrypted ciphertext sent via Gmail API with `X-QuMail-Security: OTP` & `X-QuMail-Key-ID` headers.  
+> 5. Recipient opens email → Key status `ACTIVE`. Clicks Decrypt → key consumed (`CONSUMED`), XOR-decrypted client-side.  
+> 6. Audit log records `KEY_GENERATED_OTP` and `KEY_DECRYPTED` events in Neon DB.
 
 ---
 
@@ -23,7 +46,15 @@ QuMail protects sensitive communications against future quantum computer decrypt
 ```
 +-------------------------------------------------------------------------+
 |                              USER BROWSER                               |
-|                  (QuMail React 19 + TailwindCSS v4 SPA)                 |
+|           (QuMail React 19 + TailwindCSS v4 SPA)                        |
+|                                                                         |
+|  Cryptography Layer (src/lib/crypto.js):                                |
+|  ┌──────────────────────────────────────────────────────────────┐       |
+|  │  encryptPayload(text, key, level)  ──►  OTP: XOR stream      │       |
+|  │                                    ──►  QAES: AES-256-GCM    │       |
+|  │  decryptPayload(cipher, key, level) ──► OTP: XOR stream      │       |
+|  │                                    ──►  QAES: AES-256-GCM    │       |
+|  └──────────────────────────────────────────────────────────────┘       |
 +-------------------------------------------------------------------------+
                                     |
                                     | Same-Origin API Calls (/api/*)
@@ -39,15 +70,20 @@ QuMail protects sensitive communications against future quantum computer decrypt
 |                           EXPRESS BACKEND                               |
 |                 (https://qumail-backend-rho.vercel.app)                 |
 |                                                                         |
-|  +-------------------+   +--------------------+   +------------------+  |
-|  | Better-Auth OAuth |   | Key Manager (KM)   |   | Email Router     |  |
-|  +-------------------+   +--------------------+   +------------------+  |
+|  +-------------------+   +---------------------+   +----------------+   |
+|  | Better-Auth OAuth |   | Key Manager (KM)    |   | Email Router   |   |
+|  |                   |   | ETSI GS QKD 014 API |   | Gmail API      |   |
+|  |                   |   | OTP: randomBytes(N) |   | MIME Headers   |   |
+|  |                   |   | QAES: randomBytes(32)|   | X-QuMail-*     |   |
+|  +-------------------+   +---------------------+   +----------------+   |
 +-------------------------------------------------------------------------+
            |                                  |
            v                                  v
 +-----------------------+          +-----------------------+
 |  Neon Serverless PG   |          |    Google OAuth 2.0   |
-| (Users, Keys, Logs)   |          |  & Gmail API Services  |
+| (Users, Keys, Logs)   |          |  & Gmail API Services |
+| quantumKeys table     |          |                       |
+| securityLogs table    |          |                       |
 +-----------------------+          +-----------------------+
 ```
 
@@ -65,7 +101,13 @@ qumail/
 │   │   │   ├── common/       # Middleware, Utils, Better-Auth Config
 │   │   │   ├── modules/
 │   │   │   │   ├── email/    # Email Sending/Fetching Services
-│   │   │   │   └── km/       # Quantum Key Management Controller/Routes
+│   │   │   │   │   ├── email.service.ts  # Gmail API, MIME header parsing
+│   │   │   │   │   └── email.controller.ts
+│   │   │   │   └── km/       # Quantum Key Management
+│   │   │   │       ├── km.service.ts     # Key generation (OTP dynamic length, QAES 32-byte)
+│   │   │   │       ├── km.controller.ts  # Handles keyLength param for OTP
+│   │   │   │       ├── km.routes.ts
+│   │   │   │       └── km.types.ts
 │   │   └── db/               # Drizzle Database Connection & Schemas
 │   ├── package.json
 │   └── vercel.json           # Backend Serverless Rewrites
@@ -73,10 +115,19 @@ qumail/
 ├── frontend/                 # React 19 + Vite + TailwindCSS v4 Frontend
 │   ├── src/
 │   │   ├── components/       # UI Components (Buttons, Modals, Badges)
+│   │   │   ├── SecurityBadge.jsx       # OTP/QAES/PQC/NONE visual badges
+│   │   │   └── SecurityLevelPicker.jsx # 4-tier security selector in Compose
 │   │   ├── context/          # Auth, Theme, and Toast Contexts
 │   │   ├── hooks/            # Custom Hooks (useAuth, useToast)
-│   │   ├── lib/              # Auth Client, API Client, Crypto Utilities
-│   │   ├── pages/            # Inbox, Compose, KeyManager, SecurityLogs, Settings
+│   │   ├── lib/
+│   │   │   ├── crypto.js     # encryptOTP, decryptOTP, encryptPayload, decryptPayload
+│   │   │   └── api.js        # API client
+│   │   ├── pages/
+│   │   │   ├── Compose.jsx        # Security level selection & encrypted send
+│   │   │   ├── EmailReading.jsx   # OTP/QAES/TLS visual banners & client decrypt
+│   │   │   ├── KeyManager.jsx     # ETSI KM dashboard, key registry, audit logs
+│   │   │   ├── SecurityLogs.jsx   # Real-time security event audit trail
+│   │   │   └── SecurityConfig.jsx # Default security level configuration
 │   │   └── routes/           # React Router AppRoutes
 │   ├── package.json
 │   ├── vercel.json           # Same-Origin API Proxy Rewrites
@@ -126,7 +177,7 @@ VITE_BACKEND_URL=http://localhost:8080
 ```bash
 # Install backend dependencies
 cd backend
-npm install   # or bun install
+bun install   # or npm install
 
 # Install frontend dependencies
 cd ../frontend
@@ -145,7 +196,7 @@ npx drizzle-kit push
 **Backend:**
 ```bash
 cd backend
-npm run dev   # Runs on http://localhost:8080
+bun run dev   # Runs on http://localhost:8080
 ```
 
 **Frontend:**
@@ -186,9 +237,44 @@ Under **Authorized redirect URIs**:
 
 ## 🔐 Security Architecture & Key Management
 
-1. **Authentication:** Authenticates users via `better-auth` Google OAuth2, persisting sessions securely in PostgreSQL with HTTP-only SameSite cookies.
-2. **Key Generation:** `/api/km/enc_keys` issues quantum key IDs mapped to sender-recipient pairs with expiration metadata.
-3. **Session Proxying:** Requests routed through Same-Origin reverse proxying to protect state cookies from Public Suffix List restrictions on `*.vercel.app`.
+### End-to-End Encryption Flow
+
+```
+SENDER (Browser)                    BACKEND KM                     RECIPIENT (Browser)
+      │                                  │                                │
+      │  POST /api/km/enc_keys           │                                │
+      │  { algorithm, keyLength }  ────► │  crypto.randomBytes(N)         │
+      │                            ◄──── │  Store key in DB (ACTIVE)       │
+      │                                  │  Log KEY_GENERATED_OTP         │
+      │  encryptPayload(body, key, level) │                                │
+      │  OTP:  cipher = body XOR key     │                                │
+      │  QAES: cipher = AES-GCM(body,key)│                                │
+      │                                  │                                │
+      │  POST /api/email/send            │                                │
+      │  { body: cipher, keyId, level } ─┼──── Gmail API ────────────────►│
+      │                                  │  X-QuMail-Security: OTP        │
+      │                                  │  X-QuMail-Key-ID: qk_...       │
+      │                                  │                                │
+      │                                  │  GET /api/km/dec_keys          │
+      │                                  │◄──────────────────────────────  │
+      │                                  │  Authorize user                │
+      │                                  │  Set status → CONSUMED         │
+      │                                  │  Log KEY_DECRYPTED             │
+      │                                  │  ─────────────────────────────►│
+      │                                  │                                │
+      │                                  │  decryptPayload(cipher, key, level)
+      │                                  │                                │ OTP: plain = cipher XOR key
+      │                                  │                                │ QAES: AES-GCM decrypt
+```
+
+### Key Properties
+
+1. **Single-Use Keys:** Every email generates a unique key. Keys transition `ACTIVE → CONSUMED` on first decryption.
+2. **Client-Side Only:** The plaintext message **never** reaches the backend. Encryption and decryption happen entirely in the browser.
+3. **OTP Key Length:** For OTP tier, `keyLength = TextEncoder.encode(body).length` is sent to the backend, ensuring a 1:1 key-to-plaintext byte mapping as required by Shannon's theorem.
+4. **Authentication:** Users authenticate via `better-auth` Google OAuth2 with HTTP-only SameSite session cookies in PostgreSQL.
+5. **Access Control:** Key Manager verifies the requesting user is either the sender or recipient before releasing decryption keys. Unauthorized attempts are logged as `UNAUTHORIZED_ACCESS_ATTEMPT`.
+6. **MIME Security Headers:** All encrypted emails carry `X-QuMail-Security` (tier identifier) and `X-QuMail-Key-ID` (key reference) custom MIME headers.
 
 ---
 

@@ -11,9 +11,9 @@ import ApiResponse from "../../common/utils/api-response";
 class KmController {
   static async handleEncKeys(req: Request, res: Response) {
     try {
-      const { senderEmail, recipientEmail, algorithm } = req.body;
+      const { senderEmail, recipientEmail, algorithm, keyLength } = req.body;
       const ipAddress = (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress || "127.0.0.1";
-      const result = await generateEncryptionKey(senderEmail, recipientEmail, algorithm, ipAddress);
+      const result = await generateEncryptionKey(senderEmail, recipientEmail, algorithm, ipAddress, keyLength);
       return ApiResponse.created(res, "Quantum key generated successfully", result);
     } catch (error: any) {
       return ApiResponse.error(res, error);

@@ -8,14 +8,18 @@ export async function generateEncryptionKey(
   senderEmail: string,
   recipientEmail: string,
   algorithm: string = "QAES-Kyber1024",
-  ipAddress: string = "127.0.0.1"
+  ipAddress: string = "127.0.0.1",
+  keyLength?: number
 ): Promise<EncKeyResult> {
   if (!senderEmail || !recipientEmail) {
     throw new KmError("Sender and recipient email addresses are required", 400);
   }
 
-  // Generate a random 256-bit key for AES-GCM (base64 encoded)
-  const rawKeyBytes = crypto.randomBytes(32);
+  // Determine key length: OTP uses dynamic message length (min 64 bytes up to body byte size), QAES uses 32 bytes (256 bits)
+  const isOtp = algorithm.includes("OTP") || algorithm.includes("One-Time Pad") || algorithm === "Quantum Secure";
+  const numBytes = isOtp ? Math.max(64, keyLength || 256) : 32;
+
+  const rawKeyBytes = crypto.randomBytes(numBytes);
   const keyValue = rawKeyBytes.toString("base64");
   const key_ID = `qk_${crypto.randomBytes(8).toString("hex")}`;
   const id = crypto.randomUUID();
@@ -42,7 +46,7 @@ export async function generateEncryptionKey(
   await db.insert(securityLogs).values({
     id: crypto.randomUUID(),
     userEmail: senderEmail,
-    action: "KEY_GENERATED",
+    action: isOtp ? "KEY_GENERATED_OTP" : "KEY_GENERATED",
     keyId: key_ID,
     algorithm,
     ipAddress,

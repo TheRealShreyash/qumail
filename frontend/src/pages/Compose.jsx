@@ -112,7 +112,7 @@ export default function Compose() {
           <Row label="To">
             <input value={to} onChange={(e) => setTo(e.target.value)} placeholder="recipient@example.com" className="input" />
           </Row>
-          <button onClick={() => setShowCcBcc((s) => !s)} className="flex items-center gap-1 text-xs font-medium text-blue-600">
+          <button onClick={() => setShowCcBcc((s) => !s)} className="flex items-center gap-1 text-xs font-medium text-indigo-600">
             Cc / Bcc {showCcBcc ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </button>
           {showCcBcc && (
@@ -140,9 +140,9 @@ export default function Compose() {
           placeholder="Write your message…"
           className="mt-4 w-full resize-none text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
         />
-        <div className="mt-1 text-right text-xs text-slate-400">{body.length} / {MAX_CHARS}</div>
+        <div className="mt-1 text-right font-mono text-xs text-slate-400">{body.length} / {MAX_CHARS}</div>
 
-        <label className="mt-2 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-200 py-6 text-center hover:border-blue-300 hover:bg-blue-50/30">
+        <label className="mt-2 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-slate-200 py-6 text-center transition-colors hover:border-indigo-300 hover:bg-indigo-50/30">
           <Paperclip size={18} className="text-slate-400" />
           <span className="text-xs text-slate-500">Drag files here, or click to browse</span>
           <input type="file" multiple onChange={handleFiles} className="hidden" />

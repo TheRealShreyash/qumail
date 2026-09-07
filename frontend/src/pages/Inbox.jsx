@@ -106,7 +106,7 @@ export default function Inbox({ folder: folderProp }) {
             <p className="mt-1 text-xs text-slate-400">{error}</p>
             <button
               onClick={loadEmails}
-              className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
             >
               Try Again
             </button>
@@ -147,7 +147,7 @@ function FilterSelect({ value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none rounded-lg border border-slate-200 bg-white px-3 py-1.5 pr-8 text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+        className="appearance-none rounded-lg border border-slate-200 bg-white px-3 py-1.5 pr-8 text-xs font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-100"
       >
         {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>

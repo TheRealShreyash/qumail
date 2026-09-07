@@ -84,7 +84,7 @@ export default function EmailReading() {
       }
 
       // 2. Decrypt client-side using decryptPayload (dispatches to OTP XOR or QAES AES-256)
-      const plainText = await decryptPayload(email.preview, kmRes.data.key, email.security);
+      const plainText = await decryptPayload(email.body, kmRes.data.key, email.security);
 
       setDecryptedBody(plainText);
       setDecryptedKeyId(kmRes.data.key_ID || email.keyId);
@@ -123,7 +123,7 @@ export default function EmailReading() {
   }
 
   const securityLabel = SECURITY_LABELS[email.security] || email.security;
-  const displayBody = decryptionState === "decrypted" ? decryptedBody : email.preview;
+  const displayBody = decryptionState === "decrypted" ? decryptedBody : email.body || email.preview;
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-6">
@@ -181,13 +181,13 @@ export default function EmailReading() {
 
         {/* Decrypting animation */}
         {decryptionState === "decrypting" && (
-          <div className="mb-5 flex items-center gap-3 rounded-xl border-2 border-blue-200 bg-blue-50 p-5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
-              <KeyRound size={20} className="animate-spin text-blue-600" />
+          <div className="mb-5 flex items-center gap-3 rounded-xl border-2 border-indigo-200 bg-indigo-50 p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100">
+              <KeyRound size={20} className="animate-spin text-indigo-600" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-blue-800">Decrypting…</p>
-              <p className="text-xs text-blue-500">
+              <p className="text-sm font-semibold text-indigo-800">Decrypting…</p>
+              <p className="text-xs text-indigo-500">
                 Fetching quantum key from Key Manager → {email.security === "OTP" ? "One-Time Pad bitwise XOR stream decrypt" : "AES-256-GCM decrypt"} in browser
               </p>
             </div>
@@ -252,21 +252,23 @@ export default function EmailReading() {
         )}
 
         {/* Message body — shows ciphertext when locked, plaintext when decrypted */}
-        <div className={`relative rounded-lg ${isEncrypted && decryptionState === "locked" ? "bg-slate-900 p-4" : ""}`}>
+        <div className={`relative rounded-lg ${isEncrypted && decryptionState === "locked" ? "overflow-hidden bg-slate-900" : ""}`}>
           {isEncrypted && decryptionState === "locked" ? (
             <>
-              <div className="flex items-center gap-2 mb-2">
-                <Eye size={12} className="text-slate-500" />
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-                  Encrypted Ciphertext
+              <div className="flex items-center gap-2 border-b border-slate-800 bg-slate-950/40 px-4 py-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
+                <span className="h-2.5 w-2.5 rounded-full bg-amber-500/70" />
+                <span className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
+                <span className="ml-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                  <Eye size={11} /> Encrypted Ciphertext
                 </span>
               </div>
-              <pre className="whitespace-pre-wrap break-all font-mono text-xs leading-relaxed text-green-400/80 select-all">
-                {displayBody || "(Empty encrypted payload)"}
+              <pre className="whitespace-pre-wrap break-all p-4 font-mono text-xs leading-relaxed text-green-400/80 select-all">
+                {displayBody || "(Empty encrypted payload)"}<span className="inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse bg-green-400/70 align-middle" />
               </pre>
             </>
           ) : (
-            <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
+            <p className="wrap-anywhere whitespace-pre-line text-sm leading-relaxed text-slate-600">
               {displayBody || "(No message body available)"}
             </p>
           )}

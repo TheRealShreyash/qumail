@@ -122,6 +122,34 @@ export async function sendEmailViaGmail({
   return { success: true, method: "GMAIL_API", messageId: result.id, threadId: result.threadId };
 }
 
+function decodeBase64Url(data: string): string {
+  return Buffer.from(data, "base64").toString("utf-8");
+}
+
+// Gmail nests the body under payload.body for simple messages, or under
+// payload.parts (recursively, for multipart/alternative or multipart/mixed
+// messages with attachments) — walk the tree for the text/plain part.
+function extractPlainTextBody(payload: any): string {
+  if (!payload) return "";
+
+  if (payload.mimeType === "text/plain" && payload.body?.data) {
+    return decodeBase64Url(payload.body.data);
+  }
+
+  if (Array.isArray(payload.parts)) {
+    for (const part of payload.parts) {
+      const found = extractPlainTextBody(part);
+      if (found) return found;
+    }
+  }
+
+  if (!payload.parts && payload.body?.data) {
+    return decodeBase64Url(payload.body.data);
+  }
+
+  return "";
+}
+
 export async function fetchInboxEmails(userEmail: string, folder: string = "inbox", maxResults: number = 20) {
   const { accessToken } = await getValidAccessToken(userEmail);
 
@@ -150,11 +178,12 @@ export async function fetchInboxEmails(userEmail: string, folder: string = "inbo
 
   if (messages.length === 0) return [];
 
-  // 2. Batch fetch message details in parallel
+  // 2. Batch fetch full message bodies in parallel — the ciphertext payload can run
+  // well past Gmail's ~100-char snippet, so metadata-only fetches truncate it and break decryption.
   const detailed = await Promise.all(
     messages.map(async (msg: { id: string }) => {
       const msgRes = await fetch(
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date&metadataHeaders=X-QuMail-Key-ID&metadataHeaders=X-QuMail-Security`,
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=full`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       if (!msgRes.ok) return null;
@@ -199,7 +228,7 @@ export async function fetchInboxEmails(userEmail: string, folder: string = "inbo
         senderEmail,
         subject: getHeader("Subject") || "(no subject)",
         preview: msg.snippet || "",
-        body: msg.snippet || "",
+        body: extractPlainTextBody(msg.payload) || msg.snippet || "",
         date: parsedDate.toLocaleDateString(),
         time: parsedDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         read: isRead,

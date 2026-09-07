@@ -46,52 +46,40 @@ export default function SecurityLogs() {
         {logs.length === 0 ? (
           <EmptyState icon={ScrollText} title="No security audit logs yet" description="Generate keys or send encrypted emails to generate logs." />
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
-              <tr>
-                <th className="px-4 py-2.5">Timestamp</th>
-                <th className="px-4 py-2.5">User</th>
-                <th className="px-4 py-2.5">Action</th>
-                <th className="px-4 py-2.5">Key ID</th>
-                <th className="px-4 py-2.5">Algorithm</th>
-                <th className="px-4 py-2.5">IP Address</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => (
-                <tr key={log.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
-                  <td className="whitespace-nowrap px-4 py-2.5 font-mono text-xs text-slate-500">
-                    {new Date(log.createdAt).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-2.5 text-slate-700 text-xs font-medium">{log.userEmail}</td>
-                  <td className="px-4 py-2.5">
-                    <StatusChip status={log.action.includes("UNAUTHORIZED") ? "warning" : "success"}>
-                      {log.action}
-                    </StatusChip>
-                  </td>
-                  <td className="px-4 py-2.5 font-mono text-xs text-blue-600">{log.keyId || "—"}</td>
-                  <td className="px-4 py-2.5 text-xs text-slate-500">{log.algorithm || "QAES-Kyber1024"}</td>
-                  <td className="px-4 py-2.5 text-xs font-mono text-slate-400">{log.ipAddress || "127.0.0.1"}</td>
+          <div className="thin-scroll max-h-128 overflow-auto">
+            <table className="w-full min-w-2xl text-left text-sm">
+              <thead className="sticky top-0 z-10 border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-400">
+                <tr>
+                  <th className="px-4 py-2.5">Timestamp</th>
+                  <th className="px-4 py-2.5">User</th>
+                  <th className="px-4 py-2.5">Action</th>
+                  <th className="px-4 py-2.5">Key ID</th>
+                  <th className="px-4 py-2.5">Algorithm</th>
+                  <th className="px-4 py-2.5">IP Address</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {logs.map((log, i) => (
+                  <tr key={log.id} className={`border-b border-slate-50 last:border-0 hover:bg-slate-50/50 ${i % 2 === 1 ? "bg-slate-50/30" : ""}`}>
+                    <td className="whitespace-nowrap px-4 py-2.5 font-mono text-xs text-slate-500">
+                      {new Date(log.createdAt).toLocaleString()}
+                    </td>
+                    <td className="px-4 py-2.5 text-slate-700 text-xs font-medium">{log.userEmail}</td>
+                    <td className="px-4 py-2.5">
+                      <StatusChip status={log.action.includes("UNAUTHORIZED") ? "warning" : "success"}>
+                        {log.action}
+                      </StatusChip>
+                    </td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-indigo-600">{log.keyId || "—"}</td>
+                    <td className="px-4 py-2.5 text-xs text-slate-500">{log.algorithm || "QAES-Kyber1024"}</td>
+                    <td className="px-4 py-2.5 text-xs font-mono text-slate-400">{log.ipAddress || "127.0.0.1"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
-  );
-}
-
-
-function Chip({ active, children, ...props }) {
-  return (
-    <button
-      {...props}
-      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-        active ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-      }`}
-    >
-      {children}
-    </button>
   );
 }

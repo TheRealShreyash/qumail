@@ -7,7 +7,7 @@ const icons = { success: CheckCircle2, error: XCircle, info: Info };
 const styles = {
   success: "border-green-200 bg-white text-green-700",
   error: "border-red-200 bg-white text-red-600",
-  info: "border-blue-200 bg-white text-blue-700",
+  info: "border-indigo-200 bg-white text-indigo-700",
 };
 
 export function ToastProvider({ children }) {
@@ -32,7 +32,7 @@ export function ToastProvider({ children }) {
           return (
             <div
               key={t.id}
-              className={`flex items-center gap-2 rounded-lg border px-4 py-3 shadow-lg ${styles[t.type]} animate-[fadeIn_0.15s_ease-out]`}
+              className={`animate-fade-in flex items-center gap-2 rounded-lg border px-4 py-3 shadow-lg ${styles[t.type]}`}
             >
               <Icon size={16} />
               <span className="text-sm font-medium">{t.message}</span>

@@ -20,7 +20,7 @@ export default function GoogleSignInButton({ callbackURL = "/inbox", className =
       type="button"
       onClick={handleSignIn}
       disabled={loading}
-      className={`flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
+      className={`flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-xs transition-all hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 active:scale-[0.98] active:bg-slate-100 disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 ${className}`}
     >
       {loading ? (
         <Loader2 className="h-5 w-5 animate-spin text-slate-600" />

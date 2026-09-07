@@ -47,14 +47,14 @@ export default function ProfileDropdown() {
             className="h-8 w-8 rounded-full border border-slate-200 object-cover"
           />
         ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-xs font-semibold text-white">
             {initials}
           </div>
         )}
-        <ChevronDown size={14} className="text-slate-400" />
+        <ChevronDown size={14} className="text-slate-400 transition-transform" style={{ transform: open ? "rotate(180deg)" : "none" }} />
       </button>
       {open && (
-        <div className="absolute right-0 z-40 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+        <div className="animate-scale-in absolute right-0 z-40 mt-2 w-56 origin-top-right rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
           <div className="px-3 py-2">
             <p className="text-sm font-medium text-slate-700">{user?.name || "User"}</p>
             <p className="truncate text-xs text-slate-400">{user?.email || ""}</p>

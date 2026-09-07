@@ -12,11 +12,11 @@ export default function Modal({ open, onClose, title, children, footer, maxWidth
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
       <div
         role="dialog"
         aria-modal="true"
-        className={`w-full ${maxWidth} rounded-2xl bg-white p-6 shadow-xl`}
+        className={`animate-scale-in w-full ${maxWidth} rounded-2xl bg-white p-6 shadow-xl`}
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-slate-800">{title}</h2>

@@ -40,14 +40,16 @@ export default function Login() {
 
   return (
     <div className="grid min-h-screen md:grid-cols-2">
-      <div className="hidden flex-col justify-between bg-slate-900 p-10 text-white md:flex">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
+      <div className="quantum-grid relative hidden flex-col justify-between overflow-hidden bg-slate-900 p-10 text-white md:flex">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-indigo-600/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-violet-600/10 blur-3xl" />
+        <div className="relative flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500 to-violet-600 shadow-sm shadow-indigo-500/40">
             <ShieldCheck size={16} />
           </div>
-          <span className="font-display text-lg font-semibold">QuMail</span>
+          <span className="font-display text-lg font-semibold tracking-tight">QuMail</span>
         </div>
-        <div>
+        <div className="relative">
           <p className="font-display text-3xl font-semibold leading-snug">
             Every email,<br />quantum secured.
           </p>
@@ -56,7 +58,7 @@ export default function Login() {
             encryption layer on top — your provider never sees the difference.
           </p>
         </div>
-        <p className="text-xs text-slate-500">© 2026 QuMail · v0.9.2</p>
+        <p className="relative font-mono text-xs text-slate-500">© 2026 QuMail · v0.9.2</p>
       </div>
 
       <div className="flex items-center justify-center px-6 py-12">
@@ -78,7 +80,7 @@ export default function Login() {
           <form onSubmit={handleLogin}>
 
 
-          <div className="mt-6 flex items-start gap-2 rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700">
+          <div className="mt-6 flex items-start gap-2 rounded-lg border border-indigo-100 bg-indigo-50 p-3 text-xs text-indigo-700">
             <ShieldCheck size={15} className="mt-0.5 shrink-0" />
             Your credentials are used only to relay mail through SMTP/IMAP. Message content is
             encrypted locally before it ever reaches the server.
@@ -99,11 +101,11 @@ export default function Login() {
                 type="checkbox"
                 checked={form.remember}
                 onChange={(e) => setForm((f) => ({ ...f, remember: e.target.checked }))}
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               />
               Remember me
             </label>
-            <button type="button" onClick={testConnection} className="text-sm font-medium text-blue-600 hover:underline">
+            <button type="button" onClick={testConnection} className="text-sm font-medium text-indigo-600 hover:underline">
               Test Connection
             </button>
           </div>
@@ -145,7 +147,7 @@ function Field({ label, ...props }) {
       <input
         {...props}
         className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700
-          placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
       />
     </label>
   );

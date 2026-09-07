@@ -43,10 +43,10 @@ export default function Settings() {
             <img
               src={user.image}
               alt={user.name}
-              className="h-14 w-14 rounded-full border-2 border-blue-200 object-cover"
+              className="h-14 w-14 rounded-full border-2 border-indigo-200 object-cover"
             />
           ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-lg font-bold text-white">
               {user?.name?.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() || "QM"}
             </div>
           )}
@@ -139,7 +139,7 @@ export default function Settings() {
       <div className="flex items-center gap-3">
         <button
           onClick={save}
-          className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-indigo-600/20 transition-all hover:bg-indigo-700 active:scale-[0.98]"
         >
           Save changes
         </button>
@@ -158,7 +158,7 @@ function Section({ title, icon: Icon, children }) {
   return (
     <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-5">
       <div className="mb-4 flex items-center gap-2">
-        {Icon && <Icon size={16} className="text-blue-500" />}
+        {Icon && <Icon size={16} className="text-indigo-500" />}
         <p className="text-sm font-semibold text-slate-700">{title}</p>
       </div>
       {children}
@@ -172,7 +172,7 @@ function ToggleCard({ active, icon: Icon, label, onClick }) {
       onClick={onClick}
       className={`flex flex-1 items-center justify-center gap-2 rounded-xl border-2 px-4 py-3 text-sm font-medium transition-all ${
         active
-          ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
+          ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm"
           : "border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
       }`}
     >
@@ -196,7 +196,7 @@ function CheckRow({ label, desc, checked, onChange }) {
           className="sr-only"
         />
         <div
-          className={`h-5 w-9 rounded-full transition-colors ${checked ? "bg-blue-600" : "bg-slate-200"}`}
+          className={`h-5 w-9 rounded-full transition-colors ${checked ? "bg-indigo-600" : "bg-slate-200"}`}
           onClick={() => onChange(!checked)}
         >
           <div className={`h-4 w-4 translate-y-0.5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`} />
@@ -210,7 +210,7 @@ function Info({ label, value }) {
   return (
     <div className="rounded-lg bg-slate-50 p-3">
       <p className="text-xs text-slate-400">{label}</p>
-      <p className="mt-0.5 text-sm font-medium text-slate-700">{value}</p>
+      <p className="mt-0.5 font-mono text-sm font-medium text-slate-700">{value}</p>
     </div>
   );
 }

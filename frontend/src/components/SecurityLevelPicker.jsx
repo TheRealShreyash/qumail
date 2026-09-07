@@ -68,7 +68,7 @@ export default function SecurityLevelPicker({ value, onChange }) {
             aria-checked={active}
             onClick={() => onChange(lvl.id)}
             className={`relative rounded-xl border p-4 text-left transition-all ${
-              active ? `${ring[lvl.color]} ring-2 bg-white` : "border-slate-200 bg-white hover:border-slate-300"
+              active ? `${ring[lvl.color]} ring-2 bg-white shadow-sm` : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
             }`}
           >
             {active && (
@@ -80,7 +80,7 @@ export default function SecurityLevelPicker({ value, onChange }) {
               <Icon size={17} />
             </div>
             <p className="mt-3 text-sm font-semibold text-slate-800">{lvl.title}</p>
-            <p className="text-xs font-medium text-slate-400">{lvl.subtitle}</p>
+            <p className="font-mono text-xs font-medium text-slate-400">{lvl.subtitle}</p>
             <p className="mt-2 text-xs leading-relaxed text-slate-500">{lvl.description}</p>
           </button>
         );

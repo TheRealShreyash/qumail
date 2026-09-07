@@ -20,7 +20,7 @@ function NavItem({ to, label, icon: Icon, badge }) {
       to={to}
       className={({ isActive }) =>
         `flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-          isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100"
+          isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100"
         }`
       }
     >
@@ -42,7 +42,7 @@ export default function Sidebar() {
     <aside className="flex w-60 shrink-0 flex-col gap-6 border-r border-slate-200 bg-white px-3 py-4">
       <NavLink
         to="/compose"
-        className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+        className="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 py-2.5 text-sm font-medium text-white shadow-sm shadow-indigo-600/20 transition-all hover:bg-indigo-700 hover:shadow-md hover:shadow-indigo-600/25 active:scale-[0.98]"
       >
         <PenSquare size={16} /> Compose
       </NavLink>
